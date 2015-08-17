@@ -17,7 +17,7 @@ public class DoubleApplication implements AggregateConfigurer {
 		.to(SinkModuleDefinition.class).as("sink");
 	}
 
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) {
 		SpringApplication.run(DoubleApplication.class, args);
 	}
 

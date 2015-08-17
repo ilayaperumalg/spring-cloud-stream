@@ -23,10 +23,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.cloud.stream.config.AggregateBuilderConfiguration;
-import org.springframework.cloud.stream.config.ChannelBindingAdapterConfiguration;
-import org.springframework.cloud.stream.config.ChannelBindingAdapterRunner;
-import org.springframework.cloud.stream.config.ModuleRegistrar;
+import org.springframework.cloud.stream.config.BinderConfigurationImportSelector;
+import org.springframework.cloud.stream.config.ChannelBindingImportSelector;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
@@ -42,9 +40,7 @@ import org.springframework.context.annotation.Import;
 @Documented
 @Inherited
 @Configuration
-@Import({
-	ChannelBindingAdapterConfiguration.class, ChannelBindingAdapterRunner.class,
-	AggregateBuilderConfiguration.class, ModuleRegistrar.class})
+@Import({BinderConfigurationImportSelector.class, ChannelBindingImportSelector.class})
 public @interface EnableModule {
 
 	Class<?>[] value() default {};
