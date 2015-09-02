@@ -21,6 +21,7 @@
 		<module>tap</module>
 		<module>double</module>
 		<module>extended</module>
+		<module>rxjava</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
