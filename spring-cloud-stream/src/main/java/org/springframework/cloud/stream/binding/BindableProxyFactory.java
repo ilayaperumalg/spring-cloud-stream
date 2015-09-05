@@ -17,7 +17,9 @@
 package org.springframework.cloud.stream.binding;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -39,7 +41,21 @@ import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.cloud.stream.annotation.Output;
 import org.springframework.cloud.stream.binder.MessageChannelBinderSupport;
+import org.springframework.cloud.stream.converter.ByteArrayToStringMessageConverter;
+import org.springframework.cloud.stream.converter.JavaToSerializedMessageConverter;
+import org.springframework.cloud.stream.converter.JsonToPojoMessageConverter;
+import org.springframework.cloud.stream.converter.JsonToTupleMessageConverter;
+import org.springframework.cloud.stream.converter.MessageConverterUtils;
+import org.springframework.cloud.stream.converter.PojoToJsonMessageConverter;
+import org.springframework.cloud.stream.converter.PojoToStringMessageConverter;
+import org.springframework.cloud.stream.converter.SerializedToJavaMessageConverter;
+import org.springframework.cloud.stream.converter.StringToByteArrayMessageConverter;
+import org.springframework.cloud.stream.converter.TupleToJsonMessageConverter;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
+import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.config.ConsumerEndpointFactoryBean;
@@ -47,9 +63,14 @@ import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.PollableChannel;
 import org.springframework.messaging.SubscribableChannel;
+import org.springframework.messaging.converter.CompositeMessageConverter;
+import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.scheduling.support.PeriodicTrigger;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.MimeType;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link FactoryBean} for instantiating the interfaces specified via
@@ -61,7 +82,7 @@ import org.springframework.util.ReflectionUtils;
  * @see EnableBinding
  */
 public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Object>,
-		BeanFactoryAware, Bindable, InitializingBean {
+		BeanFactoryAware, EnvironmentAware, Bindable, InitializingBean {
 
 	private static Log log = LogFactory.getLog(BindableProxyFactory.class);
 
@@ -87,6 +108,8 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 
 	private ConfigurableListableBeanFactory beanFactory;
 
+	private ConfigurableEnvironment environment;
+
 	@Autowired(required = false)
 	private SharedChannelRegistry sharedChannelRegistry;
 
@@ -97,6 +120,11 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
 		this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
+	}
+
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = (ConfigurableEnvironment) environment;
 	}
 
 	@Override
@@ -210,7 +238,49 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 	}
 
 	private MessageChannel createMessageChannel(Class<?> messageChannelType) {
-		return isPollable(messageChannelType) ? new QueueChannel() : new DirectChannel();
+		AbstractMessageChannel messageChannel = (AbstractMessageChannel)(isPollable(messageChannelType) ? new QueueChannel() : new DirectChannel());
+		List<MessageConverter> messageConverters = new ArrayList<>();
+		messageConverters.add(new JsonToTupleMessageConverter());
+		messageConverters.add(new TupleToJsonMessageConverter());
+		messageConverters.add(new JsonToPojoMessageConverter());
+		messageConverters.add(new PojoToJsonMessageConverter());
+		messageConverters.add(new ByteArrayToStringMessageConverter());
+		messageConverters.add(new StringToByteArrayMessageConverter());
+		messageConverters.add(new PojoToStringMessageConverter());
+		messageConverters.add(new JavaToSerializedMessageConverter());
+		messageConverters.add(new SerializedToJavaMessageConverter());
+		CompositeMessageConverter compositeMessageConverter = new CompositeMessageConverter(messageConverters);
+		String outputType = environment.resolvePlaceholders("${spring.cloud.stream.bindings.outputType}");
+		MimeType mimeType = getMimeType(outputType);
+		Class<?> dataType = MessageConverterUtils.getJavaTypeForContentType(mimeType, Thread.currentThread().getContextClassLoader());
+		messageChannel.setDatatypes(dataType);
+		messageChannel.setMessageConverter(compositeMessageConverter);
+		return messageChannel;
+	}
+
+	private static MimeType getMimeType(String contentTypeString) {
+		MimeType mimeType = null;
+		if (StringUtils.hasText(contentTypeString)) {
+			try {
+				mimeType = resolveContentType(contentTypeString);
+			}
+			catch (ClassNotFoundException cfe) {
+				throw new IllegalArgumentException("Could not find the class required for " + contentTypeString, cfe);
+			}
+		}
+		return mimeType;
+	}
+
+	public static MimeType resolveContentType(String type) throws ClassNotFoundException, LinkageError {
+		if (!type.contains("/")) {
+			Class<?> javaType = resolveJavaType(type);
+			return MessageConverterUtils.javaObjectMimeType(javaType);
+		}
+		return MimeType.valueOf(type);
+	}
+
+	private static Class<?> resolveJavaType(String type) throws ClassNotFoundException, LinkageError {
+		return ClassUtils.forName(type, Thread.currentThread().getContextClassLoader());
 	}
 
 	private boolean isPollable(Class<?> channelType) {
