@@ -5,6 +5,7 @@ spring:
   cloud:
     stream:
       bindings:
+        outputType: text/plain
         output: testtock
         # uncomment below to use the last digit of the seconds as a partition key
         # hashcode(key) % N is then applied with N being the partitionCount value
