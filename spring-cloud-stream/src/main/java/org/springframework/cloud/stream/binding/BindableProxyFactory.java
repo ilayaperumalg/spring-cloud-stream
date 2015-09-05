@@ -39,7 +39,10 @@ import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.cloud.stream.annotation.Output;
 import org.springframework.cloud.stream.binder.MessageChannelBinderSupport;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.config.ConsumerEndpointFactoryBean;
@@ -57,11 +60,12 @@ import org.springframework.util.ReflectionUtils;
  *
  * @author Marius Bogoevici
  * @author David Syer
+ * @author Ilayaperumal Gopinathan
  *
  * @see EnableBinding
  */
 public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Object>,
-		BeanFactoryAware, Bindable, InitializingBean {
+		BeanFactoryAware, EnvironmentAware, Bindable, InitializingBean {
 
 	private static Log log = LogFactory.getLog(BindableProxyFactory.class);
 
@@ -87,6 +91,8 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 
 	private ConfigurableListableBeanFactory beanFactory;
 
+	private ConfigurableEnvironment environment;
+
 	@Autowired(required = false)
 	private SharedChannelRegistry sharedChannelRegistry;
 
@@ -97,6 +103,11 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
 		this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
+	}
+
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = (ConfigurableEnvironment) environment;
 	}
 
 	@Override
@@ -117,7 +128,7 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 					Class<?> inputChannelType = method.getReturnType();
 					MessageChannel sharedChannel = locateSharedChannel(name);
 					if (sharedChannel == null) {
-						MessageChannel inputChannel = createMessageChannel(inputChannelType);
+						MessageChannel inputChannel = createMessageChannel(inputChannelType, true);
 						inputs.put(name, new ChannelHolder(inputChannel, true));
 					}
 					else {
@@ -127,7 +138,7 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 						else {
 							// handle the special case where the shared channel is of a different nature
 							// (i.e. pollable vs subscribable) than the target channel
-							final MessageChannel inputChannel = createMessageChannel(inputChannelType);
+							final MessageChannel inputChannel = createMessageChannel(inputChannelType, true);
 							if (isPollable(sharedChannel.getClass())) {
 								bridgePollableToSubscribableChannel(sharedChannel,
 										inputChannel);
@@ -148,7 +159,7 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 					Class<?> messageChannelType = method.getReturnType();
 					MessageChannel sharedChannel = locateSharedChannel(name);
 					if (sharedChannel == null) {
-						MessageChannel outputChannel = createMessageChannel(messageChannelType);
+						MessageChannel outputChannel = createMessageChannel(messageChannelType, false);
 						outputs.put(name, new ChannelHolder(outputChannel, true));
 					}
 					else {
@@ -158,7 +169,7 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 						else {
 							// handle the special case where the shared channel is of a different nature
 							// (i.e. pollable vs subscribable) than the target channel
-							final MessageChannel outputChannel = createMessageChannel(messageChannelType);
+							final MessageChannel outputChannel = createMessageChannel(messageChannelType, false);
 							if (isPollable(messageChannelType)) {
 								bridgePollableToSubscribableChannel(outputChannel,
 										sharedChannel);
@@ -209,8 +220,8 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 		consumerEndpointFactoryBean.start();
 	}
 
-	private MessageChannel createMessageChannel(Class<?> messageChannelType) {
-		return isPollable(messageChannelType) ? new QueueChannel() : new DirectChannel();
+	private MessageChannel createMessageChannel(Class<?> messageChannelType, boolean isInput) {
+		return (isPollable(messageChannelType) ? new QueueChannel() : new DirectChannel());
 	}
 
 	private boolean isPollable(Class<?> channelType) {
@@ -264,13 +275,14 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 			log.debug(String.format("Binding inputs for %s:%s", this.channelNamespace, this.type));
 		}
 		for (Map.Entry<String, ChannelHolder> channelHolderEntry : inputs.entrySet()) {
+			String inputChannelName = channelHolderEntry.getKey();
 			ChannelHolder channelHolder = channelHolderEntry.getValue();
+			channelBindingService.setupMessageConverters(channelHolder.getMessageChannel(), inputChannelName);
 			if (channelHolder.isBindable()) {
 				if (log.isDebugEnabled()) {
-					log.debug(String.format("Binding %s:%s:%s", this.channelNamespace, this.type, channelHolderEntry.getKey()));
+					log.debug(String.format("Binding %s:%s:%s", this.channelNamespace, this.type, inputChannelName));
 				}
-				channelBindingService.bindConsumer(
-						channelHolder.getMessageChannel(), channelHolderEntry.getKey());
+				channelBindingService.bindConsumer(channelHolder.getMessageChannel(), inputChannelName);
 			}
 		}
 	}
@@ -281,12 +293,14 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 			log.debug(String.format("Binding outputs for %s:%s", this.channelNamespace, this.type));
 		}
 		for (Map.Entry<String, ChannelHolder> channelHolderEntry : outputs.entrySet()) {
+			ChannelHolder channelHolder = channelHolderEntry.getValue();
+			String outputChannelName = channelHolderEntry.getKey();
+			channelBindingService.setupMessageConverters(channelHolder.getMessageChannel(), outputChannelName);
 			if (channelHolderEntry.getValue().isBindable()) {
 				if (log.isDebugEnabled()) {
-					log.debug(String.format("Binding %s:%s:%s", this.channelNamespace, this.type, channelHolderEntry.getKey()));
+					log.debug(String.format("Binding %s:%s:%s", this.channelNamespace, this.type, outputChannelName));
 				}
-				channelBindingService.bindProducer(channelHolderEntry.getValue()
-						.getMessageChannel(), channelHolderEntry.getKey());
+				channelBindingService.bindProducer(channelHolder.getMessageChannel(), outputChannelName);
 			}
 		}
 	}
