@@ -39,7 +39,11 @@ import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.cloud.stream.annotation.Output;
 import org.springframework.cloud.stream.binder.MessageChannelBinderSupport;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
+import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.config.ConsumerEndpointFactoryBean;
@@ -61,7 +65,7 @@ import org.springframework.util.ReflectionUtils;
  * @see EnableBinding
  */
 public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Object>,
-		BeanFactoryAware, Bindable, InitializingBean {
+		BeanFactoryAware, EnvironmentAware, Bindable, InitializingBean {
 
 	private static Log log = LogFactory.getLog(BindableProxyFactory.class);
 
@@ -87,6 +91,8 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 
 	private ConfigurableListableBeanFactory beanFactory;
 
+	private ConfigurableEnvironment environment;
+
 	@Autowired(required = false)
 	private SharedChannelRegistry sharedChannelRegistry;
 
@@ -97,6 +103,11 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
 		this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
+	}
+
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = (ConfigurableEnvironment) environment;
 	}
 
 	@Override
@@ -210,7 +221,10 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 	}
 
 	private MessageChannel createMessageChannel(Class<?> messageChannelType) {
-		return isPollable(messageChannelType) ? new QueueChannel() : new DirectChannel();
+		AbstractMessageChannel messageChannel = (AbstractMessageChannel)(isPollable(messageChannelType) ? new QueueChannel() : new DirectChannel();
+		messageChannel.setDatatypes();
+		messageChannel.setMessageConverter();
+		return messageChannel;
 	}
 
 	private boolean isPollable(Class<?> channelType) {
