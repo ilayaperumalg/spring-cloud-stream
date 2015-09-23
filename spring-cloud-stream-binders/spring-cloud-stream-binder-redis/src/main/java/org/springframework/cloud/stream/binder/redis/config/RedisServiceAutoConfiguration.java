@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.cloud.CloudAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.redis.RedisAutoConfiguration;
 import org.springframework.cloud.Cloud;
+import org.springframework.cloud.CloudConnector;
 import org.springframework.cloud.CloudFactory;
 import org.springframework.cloud.stream.binder.Binder;
 import org.springframework.context.annotation.Bean;
@@ -37,6 +38,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
  * @author Dave Syer
  * @author David Turanski
  * @author Eric Bottard
+ * @author Ilayaperumal Gopinathan
  */
 @Configuration
 @ConditionalOnMissingBean(Binder.class)
@@ -49,13 +51,40 @@ public class RedisServiceAutoConfiguration {
 	@Profile("cloud")
 	protected static class CloudConfig {
 		@Bean
-		public Cloud cloud() {
-			return new CloudFactory().getCloud();
+		public Cloud cloud(CloudFactory cloudFactory) {
+			return cloudFactory.getCloud();
 		}
+
 		@Bean
-		@ConditionalOnMissingBean(RedisConnectionFactory.class)
+		@ConditionalOnMissingBean(CloudFactory.class)
+		public CloudFactory cloudFactory() {
+			return new CloudFactory();
+		}
+
+		@Bean
 		RedisConnectionFactory redisConnectionFactory(Cloud cloud) {
 			return cloud.getSingletonServiceConnector(RedisConnectionFactory.class, null);
+		}
+	}
+
+	@Profile("lattice")
+	protected static class LatticeConfig {
+		@Bean
+		public CloudFactory cloudFactory() {
+			return new LatticeCloudFactory();
+		}
+	}
+
+	private static class LatticeCloudFactory extends CloudFactory {
+
+		@Override
+		public void registerCloudConnector(CloudConnector cloudConnector) {
+			// Make sure we only register Lattice connector in case of Lattice environment
+			// Since lattice environment also has `VCAP_APPLICATION` as environment property, the CloudFoundry connector
+			// can also be matched as the possible cloud connectors. Hence, we exclude CF connector on lattice.
+			if (cloudConnector.isInMatchingCloud()) {
+				super.registerCloudConnector(cloudConnector);
+			}
 		}
 	}
 
