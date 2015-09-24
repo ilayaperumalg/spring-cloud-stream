@@ -256,10 +256,10 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 		AbstractMessageChannel messageChannel = (AbstractMessageChannel)(isPollable(messageChannelType) ? new QueueChannel() : new DirectChannel());
 		String contentType = null;
 		if (isInput) {
-			contentType = environment.resolvePlaceholders("${spring.cloud.stream.bindings.inputType:}");
+			contentType = environment.resolvePlaceholders("${inputType:}");
 		}
 		else {
-			contentType = environment.resolvePlaceholders("${spring.cloud.stream.bindings.outputType:}");
+			contentType = environment.resolvePlaceholders("${outputType:}");
 		}
 		if (StringUtils.hasText(contentType)) {
 			MimeType mimeType = getMimeType(contentType);
