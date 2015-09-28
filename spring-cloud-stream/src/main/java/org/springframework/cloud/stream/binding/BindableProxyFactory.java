@@ -211,7 +211,7 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 	}
 
 	private MessageChannel createMessageChannel(Class<?> messageChannelType) {
-		return (isPollable(messageChannelType) ? new QueueChannel() : new DirectChannel());
+		return isPollable(messageChannelType) ? new QueueChannel() : new DirectChannel();
 	}
 
 	private boolean isPollable(Class<?> channelType) {
@@ -267,7 +267,7 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 		for (Map.Entry<String, ChannelHolder> channelHolderEntry : inputs.entrySet()) {
 			String inputChannelName = channelHolderEntry.getKey();
 			ChannelHolder channelHolder = channelHolderEntry.getValue();
-			channelBindingService.setupMessageConverters(channelHolder.getMessageChannel(), inputChannelName);
+			channelBindingService.configureMessageConverters(channelHolder.getMessageChannel(), inputChannelName);
 			if (channelHolder.isBindable()) {
 				if (log.isDebugEnabled()) {
 					log.debug(String.format("Binding %s:%s:%s", this.channelNamespace, this.type, inputChannelName));
@@ -285,7 +285,7 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 		for (Map.Entry<String, ChannelHolder> channelHolderEntry : outputs.entrySet()) {
 			ChannelHolder channelHolder = channelHolderEntry.getValue();
 			String outputChannelName = channelHolderEntry.getKey();
-			channelBindingService.setupMessageConverters(channelHolder.getMessageChannel(), outputChannelName);
+			channelBindingService.configureMessageConverters(channelHolder.getMessageChannel(), outputChannelName);
 			if (channelHolderEntry.getValue().isBindable()) {
 				if (log.isDebugEnabled()) {
 					log.debug(String.format("Binding %s:%s:%s", this.channelNamespace, this.type, outputChannelName));

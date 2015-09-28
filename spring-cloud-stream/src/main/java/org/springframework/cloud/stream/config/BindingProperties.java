@@ -38,9 +38,7 @@ public class BindingProperties {
 
 	private String partitionSelectorExpression;
 
-	private String inputType;
-
-	private String outputType;
+	private String contentType;
 
 	public String getDestination() {
 		return destination;
@@ -98,20 +96,12 @@ public class BindingProperties {
 		this.partitionSelectorExpression = partitionSelectorExpression;
 	}
 
-	public String getInputType() {
-		return this.inputType;
+	public String getContentType() {
+		return this.contentType;
 	}
 
-	public void setInputType(String inputType) {
-		this.inputType = inputType;
-	}
-
-	public String getOutputType() {
-		return this.outputType;
-	}
-
-	public void setOutputType(String outputType) {
-		this.outputType = outputType;
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
 	}
 
 }

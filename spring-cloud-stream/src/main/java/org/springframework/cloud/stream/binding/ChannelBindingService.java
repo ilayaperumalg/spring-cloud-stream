@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.stream.binding;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.stream.binder.Binder;
@@ -66,7 +66,7 @@ public class ChannelBindingService implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		List<AbstractFromMessageConverter> messageConverters = new ArrayList<>();
+		Set<AbstractFromMessageConverter> messageConverters = new HashSet<>();
 		messageConverters.add(new JsonToTupleMessageConverter());
 		messageConverters.add(new TupleToJsonMessageConverter());
 		messageConverters.add(new JsonToPojoMessageConverter());
@@ -127,26 +127,19 @@ public class ChannelBindingService implements InitializingBean {
 	 * @param messageChannel message channel to set the data-type and message converters
 	 * @param channelName the channel name
 	 */
-	public void setupMessageConverters(MessageChannel messageChannel, String channelName) {
+	public void configureMessageConverters(MessageChannel messageChannel, String channelName) {
+		Assert.isAssignable(AbstractMessageChannel.class, messageChannel.getClass());
 		BindingProperties bindingProperties = channelBindingServiceProperties.getBindings().get(channelName);
 		if (bindingProperties != null) {
-			String inputType = bindingProperties.getInputType();
-			String outputType = bindingProperties.getOutputType();
-			if (StringUtils.hasText(inputType)) {
-				setMessageConverters(messageChannel, inputType);
-			}
-			if (StringUtils.hasText(outputType)) {
-				setMessageConverters(messageChannel, outputType);
+			String contentType = bindingProperties.getContentType();
+			if (StringUtils.hasText(contentType)) {
+				MimeType mimeType = MessageConverterUtils.getMimeType(contentType);
+				MessageConverter messageConverter = messageConverterFactory.newInstance(mimeType);
+				Class<?> dataType = MessageConverterUtils.getJavaTypeForContentType(mimeType,
+						Thread.currentThread().getContextClassLoader());
+				((AbstractMessageChannel)messageChannel).setDatatypes(dataType);
+				((AbstractMessageChannel)messageChannel).setMessageConverter(messageConverter);
 			}
 		}
-	}
-
-	private void setMessageConverters(MessageChannel messageChannel, String contentType) {
-		MimeType mimeType = MessageConverterUtils.getMimeType(contentType);
-		MessageConverter messageConverter = messageConverterFactory.newInstance(mimeType);
-		Class<?> dataType = MessageConverterUtils.getJavaTypeForContentType(mimeType,
-				Thread.currentThread().getContextClassLoader());
-		((AbstractMessageChannel)messageChannel).setDatatypes(dataType);
-		((AbstractMessageChannel)messageChannel).setMessageConverter(messageConverter);
 	}
 }
