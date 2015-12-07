@@ -20,7 +20,6 @@ import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Processor;
 import org.springframework.cloud.stream.messaging.Sink;
 import org.springframework.cloud.stream.messaging.Source;
@@ -133,7 +132,6 @@ public class AggregateApplication {
 	 * Basic configuration for a parent
 	 */
 	@EnableAutoConfiguration
-	@EnableBinding
 	public static class AggregatorParentConfiguration {
 
 		@Bean

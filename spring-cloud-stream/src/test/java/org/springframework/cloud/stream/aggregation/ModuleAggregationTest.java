@@ -19,7 +19,6 @@ package org.springframework.cloud.stream.aggregation;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertThat;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -28,13 +27,13 @@ import org.springframework.cloud.stream.aggregate.SharedChannelRegistry;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Processor;
 import org.springframework.cloud.stream.messaging.Source;
+import org.springframework.cloud.stream.utils.MockBinderConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Import;
 
 /**
  * @author Marius Bogoevici
  */
-// TODO re-enable once we can test with a Mock binder
-@Ignore
 public class ModuleAggregationTest {
 
 	@Test
@@ -48,12 +47,14 @@ public class ModuleAggregationTest {
 
 	@EnableBinding(Source.class)
 	@EnableAutoConfiguration
+	@Import(MockBinderConfiguration.class)
 	public static class TestSource {
 
 	}
 
 	@EnableBinding(Processor.class)
 	@EnableAutoConfiguration
+	@Import(MockBinderConfiguration.class)
 	public static class TestProcessor {
 
 	}
