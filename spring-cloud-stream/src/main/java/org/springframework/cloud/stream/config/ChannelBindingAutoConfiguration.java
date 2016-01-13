@@ -44,6 +44,9 @@ public class ChannelBindingAutoConfiguration {
 	@Autowired
 	private DefaultPollerProperties poller;
 
+	@Autowired(required = false)
+	private List<Bindable> adapters;
+
 	@Bean(name = PollerMetadata.DEFAULT_POLLER)
 	@ConditionalOnMissingBean(PollerMetadata.class)
 	public PollerMetadata defaultPoller() {
@@ -52,7 +55,7 @@ public class ChannelBindingAutoConfiguration {
 
 	@Bean
 	@Autowired(required=false)
-	public ChannelsEndpoint channelsEndpoint(List<Bindable> adapters, ChannelBindingServiceProperties properties) {
+	public ChannelsEndpoint channelsEndpoint(ChannelBindingServiceProperties properties) {
 		return new ChannelsEndpoint(adapters, properties);
 	}
 

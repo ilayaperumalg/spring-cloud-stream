@@ -105,12 +105,14 @@ public class BindableProxyFactory implements MethodInterceptor, FactoryBean<Obje
 			Input input = AnnotationUtils.findAnnotation(method, Input.class);
 			if (input != null) {
 				String name = BindingBeanDefinitionRegistryUtils.getChannelName(input, method);
-				return this.inputHolders.get(name).getMessageChannel();
+				return (this.inputHolders.get(name) != null) ? this.inputHolders.get(name).getMessageChannel() :
+						locateSharedChannel(name);
 			}
 			Output output = AnnotationUtils.findAnnotation(method, Output.class);
 			if (output != null) {
 				String name = BindingBeanDefinitionRegistryUtils.getChannelName(output, method);
-				return this.outputHolders.get(name).getMessageChannel();
+				return (this.outputHolders.get(name) != null) ? this.outputHolders.get(name).getMessageChannel() :
+						locateSharedChannel(name);
 			}
 		}
 		//ignore
