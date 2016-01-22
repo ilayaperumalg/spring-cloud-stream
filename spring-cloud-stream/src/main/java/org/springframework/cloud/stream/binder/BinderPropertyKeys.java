@@ -142,4 +142,9 @@ public abstract class BinderPropertyKeys {
 	 */
 	public static final String MIN_PARTITION_COUNT = "minPartitionCount";
 
+	/**
+	 * Content-Type of the message.
+	 */
+	public static final String CONTENT_TYPE = "contentType";
+
 }

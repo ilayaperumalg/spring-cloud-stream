@@ -887,6 +887,8 @@ public class KafkaMessageChannelBinder extends MessageChannelBinderSupport {
 
 		private final ProducerConfiguration<byte[], byte[]> producerConfiguration;
 
+		private final String contentType;
+
 
 		private SendingHandler(String topicName, KafkaPropertiesAccessor properties, int numberOfPartitions,
 				ProducerConfiguration<byte[], byte[]> producerConfiguration) {
@@ -895,6 +897,7 @@ public class KafkaMessageChannelBinder extends MessageChannelBinderSupport {
 			this.partitioningMetadata = new PartitioningMetadata(properties, numberOfPartitions);
 			this.setBeanFactory(KafkaMessageChannelBinder.this.getBeanFactory());
 			this.producerConfiguration = producerConfiguration;
+			this.contentType = properties.getContentType();
 		}
 
 		@Override
@@ -908,7 +911,7 @@ public class KafkaMessageChannelBinder extends MessageChannelBinderSupport {
 			}
 
 			if (Mode.embeddedHeaders.equals(mode)) {
-				MessageValues transformed = serializePayloadIfNecessary(message);
+				MessageValues transformed = serializePayloadIfNecessary(message, this.contentType);
 				byte[] messageToSend = embeddedHeadersMessageConverter.embedHeaders(transformed,
 						KafkaMessageChannelBinder.this.headersToMap);
 				producerConfiguration.send(topicName, targetPartition, null, messageToSend);

@@ -410,17 +410,20 @@ public class RedisMessageChannelBinder extends MessageChannelBinderSupport imple
 
 		private final PartitioningMetadata partitioningMetadata;
 
+		private final String contentType;
+
 
 		private SendingHandler(MessageHandler delegate, String replyTo, RedisPropertiesAccessor properties) {
 			this.delegate = delegate;
 			this.replyTo = replyTo;
 			this.partitioningMetadata = new PartitioningMetadata(properties, properties.getNextModuleCount());
+			this.contentType = properties.getContentType();
 			this.setBeanFactory(RedisMessageChannelBinder.this.getBeanFactory());
 		}
 
 		@Override
 		protected void handleMessageInternal(Message<?> message) throws Exception {
-			MessageValues transformed = serializePayloadIfNecessary(message);
+			MessageValues transformed = serializePayloadIfNecessary(message, this.contentType);
 
 			if (replyTo != null) {
 				transformed.put(BinderHeaders.REPLY_TO, this.replyTo);

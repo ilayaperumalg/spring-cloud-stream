@@ -371,6 +371,10 @@ public abstract class AbstractBindingPropertiesAccessor {
 		}
 	}
 
+	public String getContentType() {
+		return getProperty(BinderPropertyKeys.CONTENT_TYPE);
+	}
+
 	@Override
 	public String toString() {
 		return this.properties.toString();

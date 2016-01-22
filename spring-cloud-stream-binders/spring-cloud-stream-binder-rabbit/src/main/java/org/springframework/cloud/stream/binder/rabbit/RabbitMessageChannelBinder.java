@@ -885,16 +885,19 @@ public class RabbitMessageChannelBinder extends MessageChannelBinderSupport impl
 
 		private final PartitioningMetadata partitioningMetadata;
 
+		private final String contentType;
+
 		private SendingHandler(MessageHandler delegate, String replyTo, RabbitPropertiesAccessor properties) {
 			this.delegate = delegate;
 			this.replyTo = replyTo;
 			this.partitioningMetadata = new PartitioningMetadata(properties, properties.getNextModuleCount());
+			this.contentType = properties.getContentType();
 			this.setBeanFactory(RabbitMessageChannelBinder.this.getBeanFactory());
 		}
 
 		@Override
 		protected void handleMessageInternal(Message<?> message) throws Exception {
-			MessageValues messageToSend = serializePayloadIfNecessary(message);
+			MessageValues messageToSend = serializePayloadIfNecessary(message, this.contentType);
 
 			if (this.replyTo != null) {
 				messageToSend.put(AmqpHeaders.REPLY_TO, this.replyTo);

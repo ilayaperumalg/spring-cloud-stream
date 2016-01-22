@@ -66,7 +66,7 @@ public class MessageChannelBinderSupportTests {
 	public void testBytesPassThru() {
 		byte[] payload = "foo".getBytes();
 		Message<byte[]> message = MessageBuilder.withPayload(payload).build();
-		MessageValues converted = binder.serializePayloadIfNecessary(message);
+		MessageValues converted = binder.serializePayloadIfNecessary(message, "");
 		assertSame(payload, converted.getPayload());
 		Message<?> convertedMessage = converted.toMessage();
 		assertSame(payload, convertedMessage.getPayload());
@@ -84,7 +84,7 @@ public class MessageChannelBinderSupportTests {
 		Message<byte[]> message = MessageBuilder.withPayload(payload)
 				.setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE)
 				.build();
-		MessageValues messageValues = binder.serializePayloadIfNecessary(message);
+		MessageValues messageValues = binder.serializePayloadIfNecessary(message, "");
 		Message<?> converted = messageValues.toMessage();
 		assertSame(payload, converted.getPayload());
 		assertEquals(MimeTypeUtils.APPLICATION_OCTET_STREAM,
@@ -100,7 +100,7 @@ public class MessageChannelBinderSupportTests {
 	@Test
 	public void testString() throws IOException {
 		MessageValues convertedValues = binder.serializePayloadIfNecessary(
-				new GenericMessage<String>("foo"));
+				new GenericMessage<String>("foo"), "");
 
 		Message<?> converted = convertedValues.toMessage();
 		assertEquals(MimeTypeUtils.TEXT_PLAIN,
@@ -116,7 +116,7 @@ public class MessageChannelBinderSupportTests {
 				.copyHeaders(Collections.singletonMap(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON))
 				.build();
 		MessageValues convertedValues = binder.serializePayloadIfNecessary(
-				inbound);
+				inbound, "");
 
 		Message<?> converted = convertedValues.toMessage();
 
@@ -132,7 +132,7 @@ public class MessageChannelBinderSupportTests {
 	@Test
 	public void testPojoSerialization() {
 		MessageValues convertedValues = binder.serializePayloadIfNecessary(
-				new GenericMessage<Foo>(new Foo("bar")));
+				new GenericMessage<Foo>(new Foo("bar")), "");
 		Message<?> converted = convertedValues.toMessage();
 		MimeType mimeType = contentTypeResolver.resolve(converted.getHeaders());
 		assertEquals("application", mimeType.getType());
@@ -147,7 +147,7 @@ public class MessageChannelBinderSupportTests {
 	@Test
 	public void testPojoWithXJavaObjectMimeTypeNoType() {
 		MessageValues convertedValues = binder.serializePayloadIfNecessary(
-				new GenericMessage<Foo>(new Foo("bar")));
+				new GenericMessage<Foo>(new Foo("bar")), null);
 		Message<?> converted = convertedValues.toMessage();
 		MimeType mimeType = contentTypeResolver.resolve(converted.getHeaders());
 		assertEquals("application", mimeType.getType());
@@ -162,7 +162,7 @@ public class MessageChannelBinderSupportTests {
 	@Test
 	public void testPojoWithXJavaObjectMimeTypeExplicitType() {
 		MessageValues convertedValues = binder.serializePayloadIfNecessary(
-				new GenericMessage<Foo>(new Foo("bar")));
+				new GenericMessage<Foo>(new Foo("bar")), null);
 		Message<?> converted = convertedValues.toMessage();
 		MimeType mimeType = contentTypeResolver.resolve(converted.getHeaders());
 		assertEquals("application", mimeType.getType());
@@ -177,7 +177,7 @@ public class MessageChannelBinderSupportTests {
 	@Test
 	public void testTupleSerialization() {
 		Tuple payload = TupleBuilder.tuple().of("foo", "bar");
-		MessageValues convertedValues = binder.serializePayloadIfNecessary(new GenericMessage<Tuple>(payload));
+		MessageValues convertedValues = binder.serializePayloadIfNecessary(new GenericMessage<Tuple>(payload), null);
 		Message<?> converted = convertedValues.toMessage();
 		MimeType mimeType = contentTypeResolver.resolve(converted.getHeaders());
 		assertEquals("application", mimeType.getType());

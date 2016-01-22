@@ -17,6 +17,7 @@
 package org.springframework.cloud.stream.binder;
 
 import static org.springframework.util.MimeTypeUtils.ALL;
+import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON;
 import static org.springframework.util.MimeTypeUtils.APPLICATION_OCTET_STREAM;
 import static org.springframework.util.MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE;
 import static org.springframework.util.MimeTypeUtils.TEXT_PLAIN;
@@ -129,7 +130,8 @@ public abstract class MessageChannelBinderSupport
 
 	protected static final Set<Object> PRODUCER_STANDARD_PROPERTIES = new HashSet<Object>(Arrays.asList(
 			BinderPropertyKeys.NEXT_MODULE_COUNT,
-			BinderPropertyKeys.NEXT_MODULE_CONCURRENCY
+			BinderPropertyKeys.NEXT_MODULE_CONCURRENCY,
+			BinderPropertyKeys.CONTENT_TYPE
 	));
 
 
@@ -558,12 +560,13 @@ public abstract class MessageChannelBinderSupport
 		}
 	}
 
-	protected final MessageValues serializePayloadIfNecessary(Message<?> message) {
+	protected final MessageValues serializePayloadIfNecessary(Message<?> message, String producerContentType) {
 		Object originalPayload = message.getPayload();
 		Object originalContentType = message.getHeaders().get(MessageHeaders.CONTENT_TYPE);
 
 		//Pass content type as String since some transport adapters will exclude CONTENT_TYPE Header otherwise
-		Object contentType = JavaClassMimeTypeConversion.mimeTypeFromObject(originalPayload).toString();
+		Object contentType = (producerContentType != null) ? producerContentType :
+				JavaClassMimeTypeConversion.mimeTypeFromObject(originalPayload).toString();
 		Object payload = serializePayloadIfNecessary(originalPayload);
 		MessageValues messageValues = new MessageValues(message);
 		messageValues.setPayload(payload);
@@ -625,7 +628,7 @@ public abstract class MessageChannelBinderSupport
 	}
 
 	private Object deserializePayload(byte[] bytes, MimeType contentType) {
-		if (TEXT_PLAIN.equals(contentType)) {
+		if (TEXT_PLAIN.equals(contentType) || APPLICATION_JSON.equals(contentType)) {
 			try {
 				return new String(bytes, "UTF-8");
 			}
