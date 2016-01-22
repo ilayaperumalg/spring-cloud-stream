@@ -16,13 +16,20 @@
 
 package org.springframework.cloud.stream.config;
 
+import java.util.Properties;
+
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.InputMessageType;
 import org.springframework.cloud.stream.binding.BindingBeanDefinitionRegistryUtils;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
 
@@ -31,7 +38,9 @@ import org.springframework.util.ClassUtils;
  * @author Dave Syer
  */
 
-public class BindingBeansRegistrar implements ImportBeanDefinitionRegistrar {
+public class BindingBeansRegistrar implements ImportBeanDefinitionRegistrar, EnvironmentAware {
+
+	private ConfigurableEnvironment environment;
 
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata metadata,
@@ -39,6 +48,18 @@ public class BindingBeansRegistrar implements ImportBeanDefinitionRegistrar {
 		AnnotationAttributes attrs = AnnotatedElementUtils.getMergedAnnotationAttributes(
 				ClassUtils.resolveClassName(metadata.getClassName(), null),
 				EnableBinding.class);
+
+		AnnotationAttributes annotation = AnnotatedElementUtils.getMergedAnnotationAttributes(
+				ClassUtils.resolveClassName(metadata.getClassName(), null), InputMessageType.class);
+		if (annotation != null) {
+			Class<?> inputMessageType = (Class) annotation.get("value");
+			if (inputMessageType != null) {
+				Properties prop = new Properties();
+				//todo: use underlying channel name instead of hard coded `input`
+				prop.setProperty("spring.cloud.stream.bindings.input.contentType", "application/x-java-object;type=" + inputMessageType.getName());
+				environment.getPropertySources().addLast(new PropertiesPropertySource("InputMessageType", prop));
+			}
+		}
 		for (Class<?> type : collectClasses(attrs, metadata.getClassName())) {
 			BindingBeanDefinitionRegistryUtils.registerChannelBeanDefinitions(type,
 					type.getName(), registry);
@@ -54,4 +75,8 @@ public class BindingBeansRegistrar implements ImportBeanDefinitionRegistrar {
 		return enableBinding.value();
 	}
 
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = (ConfigurableEnvironment) environment;
+	}
 }

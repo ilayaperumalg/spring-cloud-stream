@@ -128,7 +128,7 @@ public class ChannelBindingServiceProperties {
 		updateBatchProperties(outputChannelName, channelProducerProperties);
 		updateProducerPartitionProperties(outputChannelName, channelProducerProperties);
 		BindingProperties bindingProperties = this.bindings.get(outputChannelName);
-		if (StringUtils.hasText(bindingProperties.getContentType())) {
+		if (bindingProperties != null && StringUtils.hasText(bindingProperties.getContentType())) {
 			channelProducerProperties.setProperty(BinderPropertyKeys.CONTENT_TYPE, bindingProperties.getContentType());
 		}
 		return channelProducerProperties;
