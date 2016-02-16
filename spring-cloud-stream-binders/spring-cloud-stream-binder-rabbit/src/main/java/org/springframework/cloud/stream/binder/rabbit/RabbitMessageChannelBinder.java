@@ -381,6 +381,16 @@ public class RabbitMessageChannelBinder extends MessageChannelBinderSupport impl
 	}
 
 	@Override
+	public Set<Object> getSupportedProducerPropertyKeys() {
+		return SUPPORTED_PRODUCER_PROPERTIES;
+	}
+
+	@Override
+	public Set<Object> getSupportedConsumerPropertiesKeys() {
+		return SUPPORTED_CONSUMER_PROPERTIES;
+	}
+
+	@Override
 	public void afterPropertiesSet() throws Exception {
 		super.afterPropertiesSet();
 		if (this.clustered) {

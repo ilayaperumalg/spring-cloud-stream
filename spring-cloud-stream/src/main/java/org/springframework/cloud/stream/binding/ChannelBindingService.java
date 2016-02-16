@@ -18,6 +18,8 @@ package org.springframework.cloud.stream.binding;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.stream.binder.Binder;
 import org.springframework.cloud.stream.binder.BinderFactory;
 import org.springframework.cloud.stream.binder.Binding;
+import org.springframework.cloud.stream.binder.MessageChannelBinderSupport;
 import org.springframework.cloud.stream.config.BindingProperties;
 import org.springframework.cloud.stream.config.ChannelBindingServiceProperties;
 import org.springframework.messaging.MessageChannel;
@@ -60,8 +63,20 @@ public class ChannelBindingService {
 	public Binding<MessageChannel> bindConsumer(MessageChannel inputChannel, String inputChannelName) {
 		String channelBindingTarget = this.channelBindingServiceProperties.getBindingDestination(inputChannelName);
 		Binder<MessageChannel> binder = getBinderForChannel(inputChannelName);
+		Properties consumerProperties = this.channelBindingServiceProperties.getConsumerProperties(inputChannelName);
+		// Make sure to remove unsupported consumer properties for the binder
+		if (binder instanceof MessageChannelBinderSupport) {
+			Set<Object> supportedProperties = ((MessageChannelBinderSupport) binder).getSupportedConsumerPropertiesKeys();
+			for (Object key: consumerProperties.keySet()) {
+				if (!supportedProperties.contains(key)) {
+					consumerProperties.remove(key);
+					log.info("Removed the consumer property with the key " + key + " " +
+							"as it is not supported by the binder " + binder.toString());
+				}
+			}
+		}
 		Binding<MessageChannel> binding = binder.bindConsumer(channelBindingTarget, consumerGroup(inputChannelName), inputChannel,
-				this.channelBindingServiceProperties.getConsumerProperties(inputChannelName));
+				consumerProperties);
 		this.consumerBindings.put(inputChannelName, binding);
 		return binding;
 	}
@@ -69,6 +84,18 @@ public class ChannelBindingService {
 	public Binding<MessageChannel> bindProducer(MessageChannel outputChannel, String outputChannelName) {
 		String channelBindingTarget = this.channelBindingServiceProperties.getBindingDestination(outputChannelName);
 		Binder<MessageChannel> binder = getBinderForChannel(outputChannelName);
+		Properties producerProperties = this.channelBindingServiceProperties.getProducerProperties(outputChannelName);
+		// Make sure to remove unsupported producer properties for the binder
+		if (binder instanceof MessageChannelBinderSupport) {
+			Set<Object> supportedProperties = ((MessageChannelBinderSupport) binder).getSupportedProducerPropertyKeys();
+			for (Object key: producerProperties.keySet()) {
+				if (!supportedProperties.contains(key)) {
+					producerProperties.remove(key);
+					log.info("Removed the producer property with the key " + key + " " +
+							"as it is not supported by the binder " + binder.toString());
+				}
+			}
+		}
 		Binding<MessageChannel> binding = binder.bindProducer(channelBindingTarget, outputChannel,
 				this.channelBindingServiceProperties.getProducerProperties(outputChannelName));
 		this.producerBindings.put(outputChannelName, binding);

@@ -323,6 +323,16 @@ public class KafkaMessageChannelBinder extends MessageChannelBinderSupport {
 	}
 
 	@Override
+	public Set<Object> getSupportedProducerPropertyKeys() {
+		return SUPPORTED_PRODUCER_PROPERTIES;
+	}
+
+	@Override
+	public Set<Object> getSupportedConsumerPropertiesKeys() {
+		return SUPPORTED_CONSUMER_PROPERTIES;
+	}
+
+	@Override
 	public void afterPropertiesSet() throws Exception {
 		// we instantiate the connection factory here due to https://jira.spring.io/browse/XD-2647
 		ZookeeperConfiguration configuration = new ZookeeperConfiguration(this.zookeeperConnect);

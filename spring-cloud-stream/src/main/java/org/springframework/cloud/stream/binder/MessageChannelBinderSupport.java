@@ -353,6 +353,14 @@ public abstract class MessageChannelBinderSupport
 		this.defaultDurableSubscription = defaultDurableSubscription;
 	}
 
+	public Set<Object> getSupportedProducerPropertyKeys() {
+		return PRODUCER_STANDARD_PROPERTIES;
+	}
+
+	public Set<Object> getSupportedConsumerPropertiesKeys () {
+		return CONSUMER_STANDARD_PROPERTIES;
+	}
+
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		Assert.notNull(this.applicationContext, "The 'applicationContext' property cannot be null");

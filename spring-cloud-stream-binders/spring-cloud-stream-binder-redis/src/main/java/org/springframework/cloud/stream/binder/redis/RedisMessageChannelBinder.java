@@ -129,6 +129,16 @@ public class RedisMessageChannelBinder extends MessageChannelBinderSupport imple
 	}
 
 	@Override
+	public Set<Object> getSupportedProducerPropertyKeys() {
+		return SUPPORTED_PRODUCER_PROPERTIES;
+	}
+
+	@Override
+	public Set<Object> getSupportedConsumerPropertiesKeys() {
+		return SUPPORTED_CONSUMER_PROPERTIES;
+	}
+
+	@Override
 	public void afterPropertiesSet() throws Exception {
 		super.afterPropertiesSet();
 		this.errorAdapter.setIntegrationEvaluationContext(this.evaluationContext);
