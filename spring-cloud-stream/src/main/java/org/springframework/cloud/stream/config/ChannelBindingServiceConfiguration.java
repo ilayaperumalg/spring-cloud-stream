@@ -37,6 +37,7 @@ import org.springframework.cloud.stream.binding.BinderAwareChannelResolver;
 import org.springframework.cloud.stream.binding.BinderAwareRouterBeanPostProcessor;
 import org.springframework.cloud.stream.binding.ChannelBindingService;
 import org.springframework.cloud.stream.binding.CompositeMessageChannelConfigurer;
+import org.springframework.cloud.stream.binding.ContentTypeConfigurer;
 import org.springframework.cloud.stream.binding.ContextStartAfterRefreshListener;
 import org.springframework.cloud.stream.binding.DefaultBindableChannelFactory;
 import org.springframework.cloud.stream.binding.DynamicDestinationsBindable;
@@ -108,11 +109,17 @@ public class ChannelBindingServiceConfiguration {
 	}
 
 	@Bean
+	public ContentTypeConfigurer contentTypeConfigurer(ChannelBindingServiceProperties channelBindingServiceProperties) {
+		return new ContentTypeConfigurer(channelBindingServiceProperties, messageBuilderFactory);
+	}
+
+	@Bean
 	public CompositeMessageChannelConfigurer compositeMessageChannelConfigurer
 			(ChannelBindingServiceProperties channelBindingServiceProperties) {
 		List<MessageChannelConfigurer> configurerList = new ArrayList<>();
 		configurerList.add(messageConverterConfigurer(channelBindingServiceProperties));
 		configurerList.add((messageHistoryTrackerConfigurer(channelBindingServiceProperties)));
+		configurerList.add(contentTypeConfigurer(channelBindingServiceProperties));
 		return new CompositeMessageChannelConfigurer(configurerList);
 	}
 
