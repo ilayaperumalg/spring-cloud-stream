@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
+import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.cloud.stream.binding.Bindable;
 import org.springframework.cloud.stream.config.BindingProperties;
 import org.springframework.cloud.stream.config.ChannelBindingServiceProperties;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -31,60 +33,62 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
+ * An {@link Endpoint} that has the binding information on all the {@link Bindable} message channels.
+ *
  * @author Dave Syer
+ * @author Ilayaperumal Gopinathan
  */
-public class ChannelsEndpoint extends AbstractEndpoint<Map<String,Object>> {
+public class ChannelsEndpoint extends AbstractEndpoint<Map<String, Object>> {
 
 	private List<Bindable> adapters;
 
 	private ChannelBindingServiceProperties properties;
 
-	public ChannelsEndpoint(List<Bindable> adapters,
-			ChannelBindingServiceProperties properties) {
+	public ChannelsEndpoint(List<Bindable> adapters, ChannelBindingServiceProperties properties) {
 		super("channels");
 		this.adapters = adapters;
 		this.properties = properties;
 	}
 
 	@Override
-	public Map<String,Object> invoke() {
+	public Map<String, Object> invoke() {
 		ChannelsMetaData map = new ChannelsMetaData();
 		Map<String, BindingProperties> inputs = map.getInputs();
 		Map<String, BindingProperties> outputs = map.getOutputs();
 		for (Bindable factory : this.adapters) {
-			Map<String, BindingProperties> bindings = this.properties.getBindings();
 			for (String name : factory.getInputs()) {
-				inputs.put(name, bindings.containsKey(name) ? bindings.get(name)
-						: new BindingProperties());
+				inputs.put(name, getBindingProperties(name));
 			}
 			for (String name : factory.getOutputs()) {
-				outputs.put(name, bindings.containsKey(name) ? bindings.get(name)
-						: new BindingProperties());
+				outputs.put(name, getBindingProperties(name));
 			}
 		}
-		return new ObjectMapper().convertValue(map, new TypeReference<Map<String,Object>>() {
+		return new ObjectMapper().convertValue(map, new TypeReference<Map<String, Object>>() {
 		});
+	}
+
+	private BindingProperties getBindingProperties(String channelName) {
+		Map<String, BindingProperties> bindings = this.properties.getBindings();
+		BindingProperties bindingProperties = bindings.containsKey(channelName) ? bindings.get(channelName) :
+				new BindingProperties();
+		if (!StringUtils.hasText(bindingProperties.getDestination())) {
+			bindingProperties.setDestination(this.properties.getBindingDestination(channelName));
+		}
+		return bindingProperties;
 	}
 
 	@JsonInclude(value = Include.NON_DEFAULT)
 	public static class ChannelsMetaData {
 		private Map<String, BindingProperties> inputs = new LinkedHashMap<>();
+
 		private Map<String, BindingProperties> outputs = new LinkedHashMap<>();
 
 		public Map<String, BindingProperties> getInputs() {
 			return this.inputs;
 		}
 
-		public void setInputs(Map<String, BindingProperties> inputs) {
-			this.inputs = inputs;
-		}
-
 		public Map<String, BindingProperties> getOutputs() {
 			return this.outputs;
-		}
-
-		public void setOutputs(Map<String, BindingProperties> outputs) {
-			this.outputs = outputs;
 		}
 	}
 
