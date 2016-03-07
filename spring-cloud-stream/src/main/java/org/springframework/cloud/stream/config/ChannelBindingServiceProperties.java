@@ -24,9 +24,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
@@ -45,6 +42,9 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.integration.support.utils.IntegrationUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 /**
  * @author Dave Syer
@@ -240,8 +240,12 @@ public class ChannelBindingServiceProperties implements ApplicationContextAware,
 	}
 
 	public BindingProperties getBindingProperties(String channelName) {
-		BindingProperties bindingProperties = bindings.containsKey(channelName) ?
-				bindings.get(channelName) : new BindingProperties();
+		if (this.bindings.containsKey(channelName)) {
+			return this.bindings.get(channelName);
+		}
+		// Update the bindings map with the new Binding properties.
+		BindingProperties bindingProperties = new BindingProperties();
+		this.bindings.put(channelName, bindingProperties);
 		return bindingProperties;
 	}
 
@@ -254,6 +258,7 @@ public class ChannelBindingServiceProperties implements ApplicationContextAware,
 		if (bindingProperties != null && StringUtils.hasText(bindingProperties.getDestination())) {
 			return bindingProperties.getDestination();
 		}
+		bindingProperties.setDestination(channelName);
 		return channelName;
 	}
 }
