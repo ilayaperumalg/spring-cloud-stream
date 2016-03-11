@@ -105,6 +105,7 @@ public class BinderAwareChannelResolver extends BeanFactoryMessageChannelDestina
 					this.beanFactory.registerSingleton(beanName, channel);
 					channel = (MessageChannel) this.beanFactory.initializeBean(channel, beanName);
 					Binder<MessageChannel> binder = binderFactory.getBinder(transport);
+					this.dynamicDestinationsBindable.addDestinationName(beanName, destinationName);
 					this.dynamicDestinationsBindable.addOutputBinding(beanName, binder.bindProducer(destinationName, channel, producerProperties));
 				}
 				else {

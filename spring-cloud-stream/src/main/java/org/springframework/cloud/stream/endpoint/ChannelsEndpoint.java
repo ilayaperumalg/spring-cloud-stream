@@ -23,6 +23,7 @@ import java.util.Map;
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.cloud.stream.binding.Bindable;
+import org.springframework.cloud.stream.binding.DynamicDestinationsBindable;
 import org.springframework.cloud.stream.config.BindingProperties;
 import org.springframework.cloud.stream.config.ChannelBindingServiceProperties;
 import org.springframework.util.StringUtils;
@@ -57,22 +58,26 @@ public class ChannelsEndpoint extends AbstractEndpoint<Map<String, Object>> {
 		Map<String, BindingProperties> outputs = map.getOutputs();
 		for (Bindable factory : this.adapters) {
 			for (String name : factory.getInputs()) {
-				inputs.put(name, getBindingProperties(name));
+				inputs.put(name, getBindingProperties(factory, name));
 			}
 			for (String name : factory.getOutputs()) {
-				outputs.put(name, getBindingProperties(name));
+				outputs.put(name, getBindingProperties(factory, name));
 			}
 		}
 		return new ObjectMapper().convertValue(map, new TypeReference<Map<String, Object>>() {
 		});
 	}
 
-	private BindingProperties getBindingProperties(String channelName) {
+	private BindingProperties getBindingProperties(Bindable factory, String channelName) {
 		Map<String, BindingProperties> bindings = this.properties.getBindings();
 		BindingProperties bindingProperties = bindings.containsKey(channelName) ? bindings.get(channelName) :
 				new BindingProperties();
 		if (!StringUtils.hasText(bindingProperties.getDestination())) {
-			bindingProperties.setDestination(this.properties.getBindingDestination(channelName));
+			String destinationName = (factory instanceof DynamicDestinationsBindable) ?
+					((DynamicDestinationsBindable) factory).getDestinationName(channelName) :
+					this.properties.getBindingDestination(channelName);
+			bindingProperties.setDestination(destinationName);
+
 		}
 		return bindingProperties;
 	}
