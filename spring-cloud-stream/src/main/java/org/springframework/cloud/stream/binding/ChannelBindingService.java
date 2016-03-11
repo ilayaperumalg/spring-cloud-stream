@@ -31,7 +31,10 @@ import org.springframework.cloud.stream.binder.BinderFactory;
 import org.springframework.cloud.stream.binder.Binding;
 import org.springframework.cloud.stream.config.BindingProperties;
 import org.springframework.cloud.stream.config.ChannelBindingServiceProperties;
+import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.PollableChannel;
+import org.springframework.messaging.SubscribableChannel;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -49,18 +52,22 @@ public class ChannelBindingService {
 
 	private final Log log = LogFactory.getLog(ChannelBindingService.class);
 
-	private BinderFactory<MessageChannel> binderFactory;
+	private final BinderFactory<MessageChannel> binderFactory;
 
 	private final ChannelBindingServiceProperties channelBindingServiceProperties;
+
+	private final ChannelBindingUtils channelBindingUtils;
 
 	private final Map<String, Binding<MessageChannel>> producerBindings = new HashMap<>();
 
 	private final Map<String, List<Binding<MessageChannel>>> consumerBindings = new HashMap<>();
 
 	public ChannelBindingService(ChannelBindingServiceProperties channelBindingServiceProperties,
-								 BinderFactory<MessageChannel> binderFactory) {
+			BinderFactory<MessageChannel> binderFactory,
+			ChannelBindingUtils channelBindingUtils) {
 		this.channelBindingServiceProperties = channelBindingServiceProperties;
 		this.binderFactory = binderFactory;
+		this.channelBindingUtils = channelBindingUtils;
 	}
 
 	public Collection<Binding<MessageChannel>> bindConsumer(MessageChannel inputChannel, String inputChannelName) {
@@ -84,6 +91,14 @@ public class ChannelBindingService {
 	public Binding<MessageChannel> bindProducer(MessageChannel outputChannel, String outputChannelName) {
 		String channelBindingTarget = this.channelBindingServiceProperties.getBindingDestination(outputChannelName);
 		Binder<MessageChannel> binder = getBinderForChannel(outputChannelName);
+		if (this.channelBindingUtils.isPollable(outputChannel.getClass())) {
+			if (log.isDebugEnabled()) {
+				log.debug("Bridge the pollable output channel to a subscribable channel");
+			}
+			SubscribableChannel newOutputChannel = new DirectChannel();
+			this.channelBindingUtils.bridgePollableToSubscribableChannel(outputChannelName, (PollableChannel) outputChannel, newOutputChannel);
+			outputChannel = newOutputChannel;
+		}
 		Binding<MessageChannel> binding = binder.bindProducer(channelBindingTarget, outputChannel,
 				this.channelBindingServiceProperties.getProducerProperties(outputChannelName));
 		this.producerBindings.put(outputChannelName, binding);

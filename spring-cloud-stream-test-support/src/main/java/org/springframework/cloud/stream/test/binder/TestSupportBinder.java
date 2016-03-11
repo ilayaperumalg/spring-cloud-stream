@@ -62,7 +62,7 @@ public class TestSupportBinder implements Binder<MessageChannel> {
 	@Override
 	public Binding<MessageChannel> bindProducer(String name, MessageChannel outboundBindTarget, Properties properties) {
 		final BlockingQueue<Message<?>> queue = messageCollector.register(outboundBindTarget);
-		((SubscribableChannel)outboundBindTarget).subscribe(new MessageHandler() {
+		((SubscribableChannel) outboundBindTarget).subscribe(new MessageHandler() {
 			@Override
 			public void handleMessage(Message<?> message) throws MessagingException {
 				queue.add(message);

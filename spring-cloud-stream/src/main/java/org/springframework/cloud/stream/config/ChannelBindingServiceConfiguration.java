@@ -36,6 +36,7 @@ import org.springframework.cloud.stream.binding.BindableChannelFactory;
 import org.springframework.cloud.stream.binding.BinderAwareChannelResolver;
 import org.springframework.cloud.stream.binding.BinderAwareRouterBeanPostProcessor;
 import org.springframework.cloud.stream.binding.ChannelBindingService;
+import org.springframework.cloud.stream.binding.ChannelBindingUtils;
 import org.springframework.cloud.stream.binding.CompositeMessageChannelConfigurer;
 import org.springframework.cloud.stream.binding.ContextStartAfterRefreshListener;
 import org.springframework.cloud.stream.binding.DefaultBindableChannelFactory;
@@ -87,7 +88,7 @@ public class ChannelBindingServiceConfiguration {
 	public ChannelBindingService bindingService(
 			ChannelBindingServiceProperties channelBindingServiceProperties,
 			BinderFactory<MessageChannel> binderFactory) {
-		return new ChannelBindingService(channelBindingServiceProperties, binderFactory);
+		return new ChannelBindingService(channelBindingServiceProperties, binderFactory, channelBindingUtils());
 	}
 
 	@Bean
@@ -156,6 +157,11 @@ public class ChannelBindingServiceConfiguration {
 	@Bean
 	public DynamicDestinationsBindable dynamicBindable() {
 		return new DynamicDestinationsBindable();
+	}
+
+	@Bean
+	public ChannelBindingUtils channelBindingUtils() {
+		return new ChannelBindingUtils();
 	}
 
 	// IMPORTANT: Nested class to avoid instantiating all of the above early
