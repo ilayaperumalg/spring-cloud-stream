@@ -36,8 +36,6 @@ import java.util.Collection;
 import java.util.Properties;
 import java.util.UUID;
 
-import kafka.admin.AdminUtils;
-import kafka.api.TopicMetadata;
 import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -70,6 +68,9 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
+
+import kafka.admin.AdminUtils;
+import kafka.api.TopicMetadata;
 
 
 /**
@@ -185,7 +186,7 @@ public class KafkaBinderTests extends PartitionCapableBinderTests<KafkaTestBinde
 		final ProducerMetadata.CompressionType[] codecs = new ProducerMetadata.CompressionType[] {
 				ProducerMetadata.CompressionType.none,
 				ProducerMetadata.CompressionType.gzip,
-				ProducerMetadata.CompressionType.snappy };
+				ProducerMetadata.CompressionType.snappy};
 
 		byte[] ratherBigPayload = new byte[2048];
 		Arrays.fill(ratherBigPayload, (byte) 65);
@@ -308,12 +309,7 @@ public class KafkaBinderTests extends PartitionCapableBinderTests<KafkaTestBinde
 	@Test
 	@SuppressWarnings("unchecked")
 	public void testDefaultConsumerStartsAtEarliest() throws Exception {
-		KafkaMessageChannelBinder binder = new KafkaMessageChannelBinder(new ZookeeperConnect(kafkaTestSupport.getZkConnectString()),
-				kafkaTestSupport.getBrokerAddress(), kafkaTestSupport.getZkConnectString());
-		GenericApplicationContext context = new GenericApplicationContext();
-		context.refresh();
-		binder.setApplicationContext(context);
-		binder.afterPropertiesSet();
+		KafkaTestBinder binder = getBinder();
 		DirectChannel output = new DirectChannel();
 		QueueChannel input1 = new QueueChannel();
 
@@ -405,12 +401,7 @@ public class KafkaBinderTests extends PartitionCapableBinderTests<KafkaTestBinde
 	@Test
 	@SuppressWarnings("unchecked")
 	public void testResume() throws Exception {
-		KafkaMessageChannelBinder binder = new KafkaMessageChannelBinder(new ZookeeperConnect(kafkaTestSupport.getZkConnectString()),
-				kafkaTestSupport.getBrokerAddress(), kafkaTestSupport.getZkConnectString());
-		GenericApplicationContext context = new GenericApplicationContext();
-		context.refresh();
-		binder.setApplicationContext(context);
-		binder.afterPropertiesSet();
+		KafkaTestBinder binder = getBinder();
 		DirectChannel output = new DirectChannel();
 		QueueChannel input1 = new QueueChannel();
 
@@ -443,15 +434,8 @@ public class KafkaBinderTests extends PartitionCapableBinderTests<KafkaTestBinde
 
 	@Test
 	public void testSyncProducerMetadata() throws Exception {
-		KafkaMessageChannelBinder binder = new KafkaMessageChannelBinder(new ZookeeperConnect(kafkaTestSupport.getZkConnectString()),
-				kafkaTestSupport.getBrokerAddress(), kafkaTestSupport.getZkConnectString());
-		GenericApplicationContext context = new GenericApplicationContext();
-		context.refresh();
-		binder.setApplicationContext(context);
-		binder.afterPropertiesSet();
-
+		KafkaTestBinder binder = getBinder();
 		DirectChannel output = new DirectChannel();
-
 		String testTopicName = UUID.randomUUID().toString();
 		ExtendedProducerProperties<KafkaProducerProperties> properties = createProducerProperties();
 		properties.getExtension().setSync(true);
