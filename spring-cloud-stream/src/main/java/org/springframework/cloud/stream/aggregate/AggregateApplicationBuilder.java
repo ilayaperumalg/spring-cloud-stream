@@ -18,6 +18,7 @@ package org.springframework.cloud.stream.aggregate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -28,6 +29,7 @@ import java.util.Set;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.bind.PropertySourcesPropertyValues;
 import org.springframework.boot.bind.RelaxedDataBinder;
+import org.springframework.boot.bind.RelaxedNames;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.PropertySources;
@@ -134,22 +136,33 @@ public class AggregateApplicationBuilder {
 			AppConfigurer appConfigurer = appConfigurerEntry.getKey();
 			String namespace = appConfigurerEntry.getValue().toLowerCase();
 			Set<String> argsToUpdate = new LinkedHashSet<>();
-			// Add the args that are set at the application level first.
-			if (appConfigurer.getArgs() != null) {
-				argsToUpdate.addAll(Arrays.asList(appConfigurer.getArgs()));
-			}
+			Set<String> argKeys = new LinkedHashSet<>();
 			final HashMap<String, String> target = new HashMap<>();
 			RelaxedDataBinder relaxedDataBinder = new RelaxedDataBinder(target, namespace);
 			relaxedDataBinder.bind(new PropertySourcesPropertyValues(propertySources));
 			if (!target.isEmpty()) {
 				for (Map.Entry<String, String> entry : target.entrySet()) {
-					argsToUpdate.add("--" + entry.getKey() + "="  + entry.getValue());
+					// only update the values with the highest precedence level.
+					if (!relaxedNameKeyExists(entry.getKey(), argKeys)) {
+						argKeys.add(entry.getKey());
+						argsToUpdate.add("--" + entry.getKey() + "=" + entry.getValue());
+					}
+				}
+			}
+			// Add the args that are set at the application level if they weren't
+			// overridden above from other property sources.
+			if (appConfigurer.getArgs() != null) {
+				for (String arg: appConfigurer.getArgs()) {
+					// use the key part left to the assignment and trimming the prefix `--`
+					String key = arg.substring(0, arg.indexOf("=")).substring(2);
+					if (!relaxedNameKeyExists(key, argKeys)) {
+						argsToUpdate.add(arg);
+					}
 				}
 			}
 			if (!argsToUpdate.isEmpty()) {
 				appConfigurer.args(argsToUpdate.toArray(new String[0]));
 			}
-
 		}
 		SharedChannelRegistry sharedChannelRegistry = this.parentContext
 				.getBean(SharedChannelRegistry.class);
@@ -160,6 +173,16 @@ public class AggregateApplicationBuilder {
 			appConfigurer.embed();
 		}
 		return this.parentContext;
+	}
+
+	private boolean relaxedNameKeyExists(String key, Collection<String> collection) {
+		RelaxedNames relaxedNames = new RelaxedNames(key);
+		for (String name : relaxedNames) {
+			if (collection.contains(name)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean areAppsSelfContained() {
