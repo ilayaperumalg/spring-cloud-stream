@@ -36,6 +36,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.integration.handler.AbstractReplyProducingMessageHandler;
 import org.springframework.messaging.Message;
@@ -57,7 +58,7 @@ import org.springframework.util.StringUtils;
  * @author Ilayaperumal Gopinathan
  */
 public class StreamListenerAnnotationBeanPostProcessor
-		implements BeanPostProcessor, ApplicationContextAware, SmartInitializingSingleton {
+		implements BeanPostProcessor, ApplicationContextAware, SmartInitializingSingleton, Ordered {
 
 	private final DestinationResolver<MessageChannel> binderAwareChannelResolver;
 
@@ -335,6 +336,11 @@ public class StreamListenerAnnotationBeanPostProcessor
 			}
 		}
 		return method;
+	}
+
+	@Override
+	public int getOrder() {
+		return Ordered.LOWEST_PRECEDENCE;
 	}
 
 	private final class StreamListenerMessageHandler extends AbstractReplyProducingMessageHandler {
