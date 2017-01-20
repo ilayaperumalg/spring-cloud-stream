@@ -26,6 +26,7 @@ import javax.xml.bind.DatatypeConverter;
 import org.springframework.integration.IntegrationMessageHeaderAccessor;
 import org.springframework.integration.support.json.Jackson2JsonObjectMapper;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
 
 /**
  * Encodes requested headers into payload with format
@@ -97,12 +98,12 @@ public class EmbeddedHeadersMessageConverter {
 	 * @param copyRequestHeaders boolean value to specify if original headers should be
 	 * copied
 	 */
-	public MessageValues extractHeaders(Message<byte[]> message, boolean copyRequestHeaders) throws Exception {
-		byte[] bytes = message.getPayload();
+	public MessageValues extractHeaders(byte[] message, boolean copyRequestHeaders, MessageHeaders requestHeaders) throws Exception {
+		byte[] bytes = message;
 		ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
 		int headerCount = byteBuffer.get() & 0xff;
 		if (headerCount < 255) {
-			return oldExtractHeaders(byteBuffer, bytes, headerCount, message, copyRequestHeaders);
+			return oldExtractHeaders(byteBuffer, bytes, headerCount, copyRequestHeaders, requestHeaders);
 		}
 		else {
 			headerCount = byteBuffer.get() & 0xff;
@@ -119,12 +120,12 @@ public class EmbeddedHeadersMessageConverter {
 			}
 			byte[] newPayload = new byte[byteBuffer.remaining()];
 			byteBuffer.get(newPayload);
-			return buildMessageValues(message, newPayload, headers, copyRequestHeaders);
+			return buildMessageValues(newPayload, headers, copyRequestHeaders, requestHeaders);
 		}
 	}
 
 	private MessageValues oldExtractHeaders(ByteBuffer byteBuffer, byte[] bytes, int headerCount,
-			Message<byte[]> message, boolean copyRequestHeaders)
+			boolean copyRequestHeaders, MessageHeaders requestHeaders)
 			throws UnsupportedEncodingException {
 		Map<String, Object> headers = new HashMap<String, Object>();
 		for (int i = 0; i < headerCount; i++) {
@@ -144,14 +145,14 @@ public class EmbeddedHeadersMessageConverter {
 		}
 		byte[] newPayload = new byte[byteBuffer.remaining()];
 		byteBuffer.get(newPayload);
-		return buildMessageValues(message, newPayload, headers, copyRequestHeaders);
+		return buildMessageValues(newPayload, headers, copyRequestHeaders, requestHeaders);
 	}
 
-	private MessageValues buildMessageValues(Message<byte[]> message, byte[] payload, Map<String, Object> headers,
-			boolean copyRequestHeaders) {
+	private MessageValues buildMessageValues(byte[] payload, Map<String, Object> headers,
+			boolean copyRequestHeaders, MessageHeaders requestHeaders) {
 		MessageValues messageValues = new MessageValues(payload, headers);
-		if (copyRequestHeaders) {
-			messageValues.copyHeadersIfAbsent(message.getHeaders());
+		if (copyRequestHeaders && requestHeaders != null) {
+			messageValues.copyHeadersIfAbsent(requestHeaders);
 		}
 		return messageValues;
 	}

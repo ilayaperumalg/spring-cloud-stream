@@ -286,7 +286,7 @@ public abstract class AbstractMessageChannelBinder<C extends ConsumerProperties,
 			if (this.extractEmbeddedHeaders) {
 				try {
 					messageValues = AbstractMessageChannelBinder.this.embeddedHeadersMessageConverter.extractHeaders(
-							(Message<byte[]>) requestMessage, true);
+							(byte[]) requestMessage.getPayload(), true, requestMessage.getHeaders());
 				}
 				catch (Exception e) {
 					AbstractMessageChannelBinder.this.logger.error(

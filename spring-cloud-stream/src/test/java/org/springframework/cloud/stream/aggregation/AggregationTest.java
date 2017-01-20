@@ -136,18 +136,18 @@ public class AggregationTest {
 		assertTrue(Arrays.equals(
 				((SourceConfigurer) aggregateApplicationBuilderAccessor.getPropertyValue("sourceConfigurer"))
 						.getArgs(),
-				new String[]{ "--foo1=bar1" }));
+				new String[]{"--foo1=bar1"}));
 		final List<AggregateApplicationBuilder.ProcessorConfigurer> processorConfigurers =
 				(List<AggregateApplicationBuilder.ProcessorConfigurer>)
 						aggregateApplicationBuilderAccessor.getPropertyValue("processorConfigurers");
 		for (AggregateApplicationBuilder.ProcessorConfigurer processorConfigurer : processorConfigurers) {
 			if (processorConfigurer.getNamespace().equals("b")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--foo1=bar2" }));
+						new String[]{"--foo1=bar2"}));
 			}
 			if (processorConfigurer.getNamespace().equals("c")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--foo1=bar3" }));
+						new String[]{"--foo1=bar3"}));
 			}
 		}
 		aggregatedApplicationContext.close();
@@ -167,18 +167,18 @@ public class AggregationTest {
 		assertTrue(Arrays.equals(
 				((SourceConfigurer) aggregateApplicationBuilderAccessor.getPropertyValue("sourceConfigurer"))
 						.getArgs(),
-				new String[]{ "--fooValue=bara" }));
+				new String[]{"--fooValue=bara"}));
 		final List<AggregateApplicationBuilder.ProcessorConfigurer> processorConfigurers =
 				(List<AggregateApplicationBuilder.ProcessorConfigurer>)
 						aggregateApplicationBuilderAccessor.getPropertyValue("processorConfigurers");
 		for (AggregateApplicationBuilder.ProcessorConfigurer processorConfigurer : processorConfigurers) {
 			if (processorConfigurer.getNamespace().equals("b")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--foo1=argbarb" }));
+						new String[]{"--foo1=argbarb"}));
 			}
 			if (processorConfigurer.getNamespace().equals("c")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--foo1=barc" }));
+						new String[]{"--foo1=barc"}));
 			}
 		}
 		aggregatedApplicationContext.close();
@@ -198,18 +198,18 @@ public class AggregationTest {
 		assertTrue(Arrays.equals(
 				((SourceConfigurer) aggregateApplicationBuilderAccessor.getPropertyValue("sourceConfigurer"))
 						.getArgs(),
-				new String[]{ "--fooValue=bara" }));
+				new String[]{"--fooValue=bara"}));
 		final List<AggregateApplicationBuilder.ProcessorConfigurer> processorConfigurers =
 				(List<AggregateApplicationBuilder.ProcessorConfigurer>)
 						aggregateApplicationBuilderAccessor.getPropertyValue("processorConfigurers");
 		for (AggregateApplicationBuilder.ProcessorConfigurer processorConfigurer : processorConfigurers) {
 			if (processorConfigurer.getNamespace().equals("b")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--foo-value=barb" }));
+						new String[]{"--foo-value=barb"}));
 			}
 			if (processorConfigurer.getNamespace().equals("c")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--foo1=barc" }));
+						new String[]{"--foo1=barc"}));
 			}
 		}
 		aggregatedApplicationContext.close();
@@ -231,18 +231,18 @@ public class AggregationTest {
 		assertTrue(Arrays.equals(
 				((SourceConfigurer) aggregateApplicationBuilderAccessor.getPropertyValue("sourceConfigurer"))
 						.getArgs(),
-				new String[]{ "--fooValue=bara" }));
+				new String[]{"--fooValue=bara"}));
 		final List<AggregateApplicationBuilder.ProcessorConfigurer> processorConfigurers =
 				(List<AggregateApplicationBuilder.ProcessorConfigurer>)
 						aggregateApplicationBuilderAccessor.getPropertyValue("processorConfigurers");
 		for (AggregateApplicationBuilder.ProcessorConfigurer processorConfigurer : processorConfigurers) {
 			if (processorConfigurer.getNamespace().equals("b")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--fooValue=argbarb" }));
+						new String[]{"--fooValue=argbarb"}));
 			}
 			if (processorConfigurer.getNamespace().equals("c")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--fooValue=sysbarc" }));
+						new String[]{"--fooValue=sysbarc"}));
 			}
 		}
 		aggregatedApplicationContext.close();
@@ -264,7 +264,7 @@ public class AggregationTest {
 		assertTrue(Arrays.equals(
 				((SourceConfigurer) aggregateApplicationBuilderAccessor.getPropertyValue("sourceConfigurer"))
 						.getArgs(),
-				new String[]{ "--foo-value=sysbara" }));
+				new String[]{"--foo-value=sysbara"}));
 		final List<AggregateApplicationBuilder.ProcessorConfigurer> processorConfigurers =
 				(List<AggregateApplicationBuilder.ProcessorConfigurer>)
 						aggregateApplicationBuilderAccessor.getPropertyValue("processorConfigurers");
@@ -273,11 +273,11 @@ public class AggregationTest {
 				"processorConfigurers"))) {
 			if (processorConfigurer.getNamespace().equals("b")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--fooValue=argbarb" }));
+						new String[]{"--fooValue=argbarb"}));
 			}
 			if (processorConfigurer.getNamespace().equals("c")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--fooValue=sysbarc" }));
+						new String[]{"--fooValue=sysbarc"}));
 			}
 		}
 		aggregatedApplicationContext.close();
@@ -299,18 +299,18 @@ public class AggregationTest {
 		assertTrue(Arrays.equals(
 				((SourceConfigurer) aggregateApplicationBuilderAccessor.getPropertyValue("sourceConfigurer"))
 						.getArgs(),
-				new String[]{ "--fooValue=highest" }));
+				new String[]{"--fooValue=highest"}));
 		final List<AggregateApplicationBuilder.ProcessorConfigurer> processorConfigurers =
 				(List<AggregateApplicationBuilder.ProcessorConfigurer>)
 						aggregateApplicationBuilderAccessor.getPropertyValue("processorConfigurers");
 		for (AggregateApplicationBuilder.ProcessorConfigurer processorConfigurer : processorConfigurers) {
 			if (processorConfigurer.getNamespace().equals("b")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--fooValue=argbarb" }));
+						new String[]{"--fooValue=argbarb"}));
 			}
 			if (processorConfigurer.getNamespace().equals("c")) {
 				assertTrue(Arrays.equals(processorConfigurer.getArgs(),
-						new String[]{ "--foo-value=sysbarc" }));
+						new String[]{"--foo-value=sysbarc"}));
 			}
 		}
 		aggregatedApplicationContext.close();
@@ -363,9 +363,11 @@ public class AggregationTest {
 			Map<?, ?> targetCache = (Map<?, ?>) ReflectionUtils.getField(field, factory);
 			if (factory.getObjectType() == Source.class) {
 				assertThat(targetCache).hasSize(1);
-			} else if (factory.getObjectType() == Processor.class) {
+			}
+			else if (factory.getObjectType() == Processor.class) {
 				assertThat(targetCache).hasSize(2);
-			} else {
+			}
+			else {
 				Assert.fail("Found unexpected type");
 			}
 		}

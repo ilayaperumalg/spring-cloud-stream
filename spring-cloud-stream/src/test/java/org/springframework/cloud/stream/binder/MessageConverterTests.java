@@ -42,7 +42,7 @@ public class MessageConverterTests {
 		assertThat(new String(embedded).substring(1)).isEqualTo(
 				"\u0002\u0003foo\u0000\u0000\u0000\u0005\"bar\"\u0003baz\u0000\u0000\u0000\u0006\"quxx\"Hello");
 
-		MessageValues extracted = converter.extractHeaders(MessageBuilder.withPayload(embedded).build(), false);
+		MessageValues extracted = converter.extractHeaders(embedded, false, null);
 		assertThat(new String((byte[]) extracted.getPayload())).isEqualTo("Hello");
 		assertThat(extracted.get("foo")).isEqualTo("bar");
 		assertThat(extracted.get("baz")).isEqualTo("quxx");
@@ -58,7 +58,7 @@ public class MessageConverterTests {
 		assertThat(new String(embedded, "UTF-8").substring(1)).isEqualTo(
 				"\u0002\u0003foo\u0000\u0000\u0000\u0005\"bar\"\u0003baz\u0000\u0000\u0000\u0012\"ØØØØØØØØ\"Hello");
 
-		MessageValues extracted = converter.extractHeaders(MessageBuilder.withPayload(embedded).build(), false);
+		MessageValues extracted = converter.extractHeaders(embedded, false, null);
 		assertThat(new String((byte[]) extracted.getPayload())).isEqualTo("Hello");
 		assertThat(extracted.get("foo")).isEqualTo("bar");
 		assertThat(extracted.get("baz")).isEqualTo("ØØØØØØØØ");
@@ -78,7 +78,7 @@ public class MessageConverterTests {
 		EmbeddedHeadersMessageConverter converter = new EmbeddedHeadersMessageConverter();
 		byte[] bytes = "\u0002\u0003foo\u0003bar\u0003baz\u0004quxxHello".getBytes("UTF-8");
 		Message<byte[]> message = new GenericMessage<>(bytes);
-		MessageValues extracted = converter.extractHeaders(message, false);
+		MessageValues extracted = converter.extractHeaders(bytes, false, null);
 		assertThat(new String((byte[]) extracted.getPayload())).isEqualTo("Hello");
 		assertThat(extracted.get("foo")).isEqualTo("bar");
 		assertThat(extracted.get("baz")).isEqualTo("quxx");
@@ -90,7 +90,7 @@ public class MessageConverterTests {
 		byte[] bytes = "\u0002\u0003foo\u0020bar\u0003baz\u0004quxxHello".getBytes("UTF-8");
 		Message<byte[]> message = new GenericMessage<byte[]>(bytes);
 		try {
-			converter.extractHeaders(message, false);
+			converter.extractHeaders(bytes, false, null);
 			Assert.fail("Exception expected");
 		}
 		catch (Exception e) {
