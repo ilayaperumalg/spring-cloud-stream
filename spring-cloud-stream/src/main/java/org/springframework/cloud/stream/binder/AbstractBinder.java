@@ -239,7 +239,8 @@ public abstract class AbstractBinder<T, C extends ConsumerProperties, P extends 
 	}
 
 	private Object deserializePayload(byte[] bytes, MimeType contentType) {
-		if ("text".equalsIgnoreCase(contentType.getType()) || contentType.getSubtype().toLowerCase().contains(MimeTypeUtils.APPLICATION_JSON.getSubtype())) {
+		if ("text".equalsIgnoreCase(contentType.getType())
+				|| contentType.getSubtype().toLowerCase().contains(MimeTypeUtils.APPLICATION_JSON.getSubtype())) {
 			try {
 				return new String(bytes, "UTF-8");
 			}
@@ -310,7 +311,8 @@ public abstract class AbstractBinder<T, C extends ConsumerProperties, P extends 
 				return MimeTypeUtils.APPLICATION_OCTET_STREAM;
 			}
 			if (payload instanceof String) {
-				return originalContentType.toLowerCase().contains(MimeTypeUtils.APPLICATION_JSON.getSubtype()) ? MimeType.valueOf(originalContentType) : MimeTypeUtils.TEXT_PLAIN;
+				return originalContentType.toLowerCase().contains(MimeTypeUtils.APPLICATION_JSON.getSubtype()) ? MimeTypeUtils.APPLICATION_JSON
+						: MimeTypeUtils.TEXT_PLAIN;
 			}
 			String className = payload.getClass().getName();
 			MimeType mimeType = mimeTypesCache.get(className);

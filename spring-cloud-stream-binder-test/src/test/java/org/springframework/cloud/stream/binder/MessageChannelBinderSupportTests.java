@@ -139,8 +139,8 @@ public class MessageChannelBinderSupportTests {
 				.build();
 		MessageValues convertedValues = binder.serializePayloadIfNecessary(inbound);
 		Message<?> converted = convertedValues.toMessage();
-		assertThat(contentTypeResolver.resolve(converted.getHeaders())).isEqualTo(MimeType.valueOf("application/vnd.spring.cloud.stream.user.v1+json"));
-		assertThat(converted.getHeaders().get(BinderHeaders.BINDER_ORIGINAL_CONTENT_TYPE)).isNull();
+		assertThat(contentTypeResolver.resolve(converted.getHeaders())).isEqualTo(MimeType.valueOf("application/json"));
+		assertThat(converted.getHeaders().get(BinderHeaders.BINDER_ORIGINAL_CONTENT_TYPE)).isEqualTo("application/vnd.spring.cloud.stream.user.v1+json");
 		MessageValues reconstructed = binder.deserializePayloadIfNecessary(converted);
 		assertThat(reconstructed.getPayload()).isEqualTo("{\"foo\":\"foo\"}");
 		assertThat(reconstructed.get(MessageHeaders.CONTENT_TYPE)).isEqualTo(MimeType.valueOf("application/vnd.spring.cloud.stream.user.v1+json").toString());
